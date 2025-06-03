@@ -59,7 +59,7 @@ jobs:
           target: "~/"
 
       - name: Deploy on Server 1
-        uses: appleboy/ssh-action@v0.1.3
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST1 }}
           username: ${{ secrets.SERVER_USER }}
@@ -82,7 +82,7 @@ jobs:
           target: "~/"
 
       - name: Deploy on Server 2
-        uses: appleboy/ssh-action@v0.1.3
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST2 }}
           username: ${{ secrets.SERVER_USER }}
