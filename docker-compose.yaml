@@ -1,9 +1,9 @@
-version: '3.1'Add commentMore actions
+version: '3.1'
 
 services:
   # E-commerce UI Service
   ecommerce-ui:
-    build: ./ecommerce-ui
+    image: hema995/ecommerce-ui:1
     container_name: ecommerce-ui
     ports:
       - "4000:4000" # Expose port 4000 for the e-commerce UI
@@ -24,7 +24,7 @@ services:
 
   # Contact Support Microservice
   contact-support-team:
-    build: ./contact-support-team
+    image: hema995/contact-support-team:1
     container_name: contact-support-team
     ports:
       - "8000:8000" # Expose port 8000 for the contact support microservice
@@ -44,7 +44,7 @@ services:
 
   # Shipping and Handling Microservice
   shipping-and-handling:
-    build: ./shipping-and-handling
+    image: hema995/shipping-and-handling:1
     container_name: shipping-and-handling
     ports:
       - "8088:8088" # Expose port 8080 for the shipping and handling microservice
@@ -62,7 +62,7 @@ services:
 
   # Product Catalog Microservice
   product-catalog:
-    build: ./product-catalog
+    image: hema995/product-catalog:1
     container_name: product-catalog
     ports:
       - "3001:3001" # Expose port 3001 for the product catalog microservice
@@ -82,7 +82,7 @@ services:
 
   # Order Management Microservice
   order-management:
-    build: ./order-management
+    image: hema995/order-management:1
     container_name: order-management
     depends_on:
       - mongodb-order-management # Depends on the MongoDB service
@@ -103,7 +103,7 @@ services:
 
   # Product Inventory Microservice
   product-inventory:
-    build: ./product-inventory
+    image: hema995/product-inventory:1
     container_name: product-inventory
     depends_on:
       - postgres-product-inventory # Depends on the PostgreSQL service
@@ -129,7 +129,7 @@ services:
 
   # Profile Management Microservice
   profile-management:
-    build: ./profile-management
+    image: hema995/profile-management:1
     container_name: profile-management
     depends_on:
       - mysql-profile-management # Depends on the MySQL service
