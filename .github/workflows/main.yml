@@ -67,6 +67,32 @@ jobs:
           port: 22
           debug: true
           script: |
-              whoami
-              ls -la ~/
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+            docker-compose -f ~/docker-compose.yaml pull
+            docker-compose -f ~/docker-compose.yaml down
+            docker-compose -f ~/docker-compose.yaml up -d
+
+      - name: Copy docker-compose.yml to Server 2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST2 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 22
+          source: "docker-compose.yaml"
+          target: "~/"
+
+      - name: Deploy on Server 2
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST2 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 22
+          debug: true
+          script: |
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+            docker-compose -f ~/docker-compose.yaml pull
+            docker-compose -f ~/docker-compose.yaml down
+            docker-compose -f ~/docker-compose.yaml up -d
       
