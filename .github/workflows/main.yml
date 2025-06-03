@@ -59,17 +59,3 @@ jobs:
           port: 22
           source: "docker-compose.yaml"
           target: "~/"
-
-      - name: Deploy on ${{ matrix.server.name }}
-        uses: appleboy/ssh-action@v0.1.4
-        with:
-          host: ${{ matrix.server.host }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_KEY }}
-          port: 22
-          script: |
-            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
-            docker-compose -f ~/docker-compose.yaml pull
-            docker-compose -f ~/docker-compose.yaml down
-            docker-compose -f ~/docker-compose.yaml up -d
-            docker-compose -f ~/docker-compose.yaml ps
