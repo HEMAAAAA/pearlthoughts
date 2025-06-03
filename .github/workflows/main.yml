@@ -1,0 +1,41 @@
+name: Build, Push, and Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    name: ${{ matrix.service.name }} - Build, Push & Deploy
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - { name: contact-support-team, path: contact-support-team }
+          - { name: profile-management, path: profile-management }
+          - { name: order-management, path: order-management }
+          - { name: shipping-and-handling, path: shipping-and-handling }
+          - { name: product-inventory, path: product-inventory }
+          - { name: ecommerce-ui, path: ecommerce-ui }
+          - { name: product-catalog, path: product-catalog }
+
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read    # Allow repo access
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build & Push Docker Image
+        working-directory: ${{ matrix.service.path }}
+        run: |
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service.name }}"
+          TAG="${{ github.run_number }}"
+
+          docker build -t $IMAGE:$TAG .
+          docker push $IMAGE:$TAG
