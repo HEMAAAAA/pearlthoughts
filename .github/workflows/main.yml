@@ -1,3 +1,5 @@
+
+    
 name: Build, Push, and Deploy
 
 on:
@@ -5,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  build-and-deploy:
-    name: ${{ matrix.service.name }} - Build, Push & Deploy
+  build-and-push:
+    name: Build and Push Services
     runs-on: ubuntu-latest
 
     strategy:
@@ -19,10 +21,6 @@ jobs:
           - { name: product-inventory, path: product-inventory }
           - { name: ecommerce-ui, path: ecommerce-ui }
           - { name: product-catalog, path: product-catalog }
-
-    permissions:
-      id-token: write   # Required for OIDC
-      contents: read    # Allow repo access
 
     steps:
       - name: Checkout Code
@@ -39,3 +37,58 @@ jobs:
 
           docker build -t $IMAGE:$TAG .
           docker push $IMAGE:$TAG
+
+  deploy:
+    name: Deploy to EC2 Servers
+    runs-on: ubuntu-latest
+    needs: build-and-push  # Wait until all services are built
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Copy docker-compose.yml to Server 1
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST1 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 2828
+          source: "docker-compose.yml"
+          target: "~/"
+
+      - name: Deploy on Server 1
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SERVER_HOST1 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 2828
+          script: |
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+            docker-compose -f ~/docker-compose.yml pull
+            docker-compose -f ~/docker-compose.yml down
+            docker-compose -f ~/docker-compose.yml up -d
+
+      - name: Copy docker-compose.yml to Server 2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST2 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 2828
+          source: "docker-compose.yml"
+          target: "~/"
+
+      - name: Deploy on Server 2
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SERVER_HOST2 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: 2828
+          script: |
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+            docker-compose -f ~/docker-compose.yml pull
+            docker-compose -f ~/docker-compose.yml down
+            docker-compose -f ~/docker-compose.yml up -d
