@@ -1,0 +1,163 @@
+version: '3.1'Add commentMore actions
+
+services:
+  # E-commerce UI Service
+  ecommerce-ui:
+    build: ./ecommerce-ui
+    container_name: ecommerce-ui
+    ports:
+      - "4000:4000" # Expose port 4000 for the e-commerce UI
+    environment:
+      - REACT_APP_PROFILE_API_HOST=http://profile-management # URL for the profile management microservice
+      - REACT_APP_SHIPPING_API_HOST=http://shipping-and-handling # URL for the shipping and handling microservice
+      - REACT_APP_CONTACT_API_HOST=http://contact-support-team # URL for the contact support microservice
+      - REACT_APP_INVENTORY_API_HOST=http://product-inventory # URL for the product inventory microservice
+      - REACT_APP_PRODUCT_API_HOST=http://product-catalog # URL for the product catalog microservice
+      - REACT_APP_ORDER_API_HOST=http://order-management # URL for the order management microservice
+    depends_on:
+      - profile-management
+      - product-catalog
+      - product-inventory
+      - order-management
+      - shipping-and-handling
+      - contact-support-team
+
+  # Contact Support Microservice
+  contact-support-team:
+    build: ./contact-support-team
+    container_name: contact-support-team
+    ports:
+      - "8000:8000" # Expose port 8000 for the contact support microservice
+    depends_on:
+      - mongodb-contact-support-team # Depends on the MongoDB service
+    environment:
+      - MONGODB_HOST=mongodb-contact-support-team # MongoDB host
+      - MONGODB_PORT=27017 # MongoDB port
+      - MONGODB_DATABASE=contact_support # MongoDB database (will be created if it doesn't exist)
+
+  # MongoDB for Contact Support Microservice
+  mongodb-contact-support-team:
+    image: mongo
+    container_name: mongodb-contact-support-team
+    volumes:
+      - mongodb_contact_support_data:/data/db # Persist MongoDB data to a volume
+
+  # Shipping and Handling Microservice
+  shipping-and-handling:
+    build: ./shipping-and-handling
+    container_name: shipping-and-handling
+    ports:
+      - "8088:8088" # Expose port 8080 for the shipping and handling microservice
+    depends_on:
+      - mongodb-shipping # Depends on the MongoDB service
+    environment:
+      - MONGO_URI=mongodb://mongodb-shipping:27017 # MongoDB connection URI
+
+  # MongoDB for Shipping and Handling Microservice
+  mongodb-shipping:
+    image: mongo
+    container_name: mongodb-shipping
+    volumes:
+      - mongodb_shipping_data:/data/db # Persist MongoDB data to a volume
+
+  # Product Catalog Microservice
+  product-catalog:
+    build: ./product-catalog
+    container_name: product-catalog
+    ports:
+      - "3001:3001" # Expose port 3001 for the product catalog microservice
+    depends_on:
+      - mongodb-product-catalog # Depends on the MongoDB service
+    environment:
+      - MONGODB_HOST=mongodb-product-catalog # MongoDB host
+      - MONGODB_PORT=27017 # MongoDB port
+      - MONGODB_DATABASE=product_catalog # MongoDB database
+
+  # MongoDB for Product Catalog Microservice
+  mongodb-product-catalog:
+    image: mongo
+    container_name: mongodb-product-catalog
+    volumes:
+      - mongodb_product_catalog_data:/data/db # Persist MongoDB data to a volume
+
+  # Order Management Microservice
+  order-management:
+    build: ./order-management
+    container_name: order-management
+    depends_on:
+      - mongodb-order-management # Depends on the MongoDB service
+    ports:
+      - "9090:9090" # Expose port 9090 for the order management microservice
+    environment:
+      - PRODUCT_INVENTORY_API_HOST=http://product-inventory # URL for the product inventory microservice
+      - PRODUCT_CATALOG_API_HOST=http://product-catalog # URL for the product catalog microservice
+      - SHIPPING_HANDLING_API_HOST=http://shipping-and-handling # URL for the shipping and handling microservice
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb-order-management:27017/order_management # MongoDB connection URI
+
+  # MongoDB for Order Management Microservice
+  mongodb-order-management:
+    image: mongo
+    container_name: mongodb-order-management
+    volumes:
+      - mongodb_order_management_data:/data/db # Persist MongoDB data to a volume
+
+  # Product Inventory Microservice
+  product-inventory:
+    build: ./product-inventory
+    container_name: product-inventory
+    depends_on:
+      - postgres-product-inventory # Depends on the PostgreSQL service
+    ports:
+      - "3002:3002" # Expose port 3002 for the product inventory microservice
+    environment:
+      - POSTGRES_HOST=postgres-product-inventory # PostgreSQL host
+      - POSTGRES_PORT=5432 # PostgreSQL port
+      - POSTGRES_DB=product_inventory # PostgreSQL database
+      - POSTGRES_USER=inventory_user # PostgreSQL user
+      - POSTGRES_PASSWORD=inventory_password # PostgreSQL password
+
+  # PostgreSQL for Product Inventory Microservice
+  postgres-product-inventory:
+    image: postgres
+    container_name: postgres-product-inventory
+    environment:
+      - POSTGRES_DB=product_inventory # PostgreSQL database
+      - POSTGRES_USER=inventory_user # PostgreSQL user
+      - POSTGRES_PASSWORD=inventory_password # PostgreSQL password
+    volumes:
+      - postgres_product_inventory_data:/var/lib/postgres/data # Persist PostgreSQL data to a volume
+
+  # Profile Management Microservice
+  profile-management:
+    build: ./profile-management
+    container_name: profile-management
+    depends_on:
+      - mysql-profile-management # Depends on the MySQL service
+    ports:
+      - "3003:3003" # Expose port 3003 for the profile management microservice
+    environment:
+      - MYSQL_HOST=mysql-profile-management # MySQL host
+      - MYSQL_PORT=3306 # MySQL port
+      - MYSQL_DATABASE=profile_management # MySQL database
+      - MYSQL_USER=profile_user # MySQL user
+      - MYSQL_PASSWORD=profile_password # MySQL password
+
+  # MySQL for Profile Management Microservice
+  mysql-profile-management:
+    image: mysql:8.0
+    container_name: mysql-profile-management
+    environment:
+      - MYSQL_DATABASE=profile_management # MySQL database
+      - MYSQL_USER=profile_user # MySQL user
+      - MYSQL_PASSWORD=profile_password # MySQL password
+      - MYSQL_ROOT_PASSWORD=root_password # MySQL root password
+    volumes:
+      - mysql_profile_management_data:/var/lib/mysql # Persist MySQL data to a volume
+
+volumes:
+  mongodb_product_catalog_data:
+  mongodb_contact_support_data:
+  mongodb_shipping_data:
+  mongodb_order_management_data:
+  mysql_profile_management_data:
+  postgres_product_inventory_data:
